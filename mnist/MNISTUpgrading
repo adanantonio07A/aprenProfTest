@@ -1,0 +1,173 @@
+
+#Importar Librerías
+import numpy as np
+import matplotlib.pyplot as plt
+import tensorflow as tf
+import keras
+
+#Análisis inicial de la base de datos
+a = tf.keras.datasets.mnist.load_data()
+print(type(a))
+print(len(a))
+a_1 = a[0]
+print(type(a_1))
+print(len(a_1))
+a_1_a=a_1[0]
+print(len(a_1))
+a_1_a_1=a_1_a[0]
+print(len(a_1_a_1))
+a_2 = a[1]
+print(type(a_2))
+print(len(a_2))
+a_2_a=a_2[0]
+print(len(a_2_a))
+#Organización de la base de datos
+num_classes =10
+input_shape= (28,28,1)
+#Dividir los datos entre un set de entrenamiento y un set de prueba
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+
+#Escalar las imagenes en un rango entre 0 y 1
+x_train=x_train.astype("float32") / 255
+x_test=x_test.astype("float32") / 255
+#Darle a las imagenes un tamano de (28,28,1)
+x_train=np.expand_dims(x_train, -1)
+x_test=np.expand_dims(x_test, -1)
+print("x_train shape:", x_train.shape)
+print(x_train.shape[0], "train samples")
+print(x_test.shape[0], "test samples")
+# Convertir las clases (etiquetas en salidas)
+print(y_train)
+y_train = tf.keras.utils.to_categorical(y_train, num_classes)
+
+y_test = tf.keras.utils.to_categorical(y_test,10)
+#Algunas muestras de las imágenes existentes en el conjunto de datos
+for i in range(12):
+  plt.subplot(3,4,i+1)
+  #plt.subplot(3, 3, i)
+  plt.imshow(x_train[i, :,:,0], cmap=plt.get_cmap('gray'))
+plt.show()
+#Creación del modelo
+from tensorflow.keras import layers
+model = keras.Sequential(
+    [
+     keras.Input(shape=input_shape),
+     layers.Conv2D(8,kernel_size=(3,3), activation='relu'),
+     layers.MaxPool2D(pool_size=(2,2)),
+     layers.Conv2D(16,kernel_size=(3,3), activation='relu'),
+     layers.MaxPool2D(pool_size=(2,2)),
+     layers.Flatten(),
+     layers.Dropout(0.5),
+     layers.Dense(num_classes,activation='softmax'),
+    ]
+)
+
+model.summary()
+
+#Entrenar el modelo
+batch_size = 128
+epochs = 10
+model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
+history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.2)
+model.save("mnist_model.h5")
+#Evaluar el modelo
+score = model.evaluate(x_test, y_test, verbose=0)
+print("Test loss:", score[0])
+print("Test accuracy:", score[1])
+# Visualizar los resultados del sistema
+for i in range(9):
+  # define subplot
+  plt.subplot(330 + 1 + i)
+  # plot raw pixel data
+  plt.imshow(x_test[i,:,:,0], cmap=plt.get_cmap('gray'))
+# show the figure
+plt.show()
+xr=np.expand_dims(x_test, 1)
+print(xr[0].shape)
+for i in range(9):
+  resultado = model.predict(xr[i],batch_size = 0)
+  argumento = np.argmax(resultado)
+  print('Prediccion: ',argumento, 'Real: ', np.argmax(y_test[i]))
+# Ruta de la carpeta con las imágenes locales
+import os
+from PIL import ImageTk, Image
+#drive.mount('/content/drive')
+local_images_path='C:\\Users\\adana\\Documents\\Doctorado\\Sem05\\smalltests\\DLCourse\\Mnist\\testSamples'
+#local_images_path='testSamples/'
+#local_images_path = "local_images"
+# Función para cargar y validar imágenes locales
+def load_and_validate_images(folder_path, target_size=(28, 28)):
+    images = []
+    for filename in os.listdir(folder_path):
+        if filename.endswith((".png", ".jpg", ".jpeg")):
+            try:
+                img = Image.open(os.path.join(folder_path, filename)).convert("L") # Convertir a escala de grises
+                if img.size != target_size:
+                    img = img.resize(target_size) # Redimensionar si es necesario
+                img_array = np.array(img).astype("float32") / 255
+                img_array = np.expand_dims(img_array, -1) # Expandir dimensiones a (28, 28, 1)
+                images.append(img_array)
+            except Exception as e:
+                print(f"Error al procesar {filename}: {e}")
+    return np.array(images)
+# Cargar y validar las imágenes locales
+local_images = load_and_validate_images(local_images_path)
+
+# Realizar predicciones en las imágenes locales y mostrarlas
+if len(local_images) > 0:
+    for i in range(min(9, len(local_images))):
+        plt.subplot(350 + 1 + i)
+        plt.imshow(local_images[i, :, :, 0], cmap=plt.get_cmap('gray'))
+        prediction = model.predict(np.expand_dims(local_images[i], 0))
+        plt.title(f'Pred: {np.argmax(prediction)}')
+    plt.show()
+else:
+    print("No se encontraron imágenes locales para predecir.")
+    
+
+# Ruta de la carpeta con las imágenes locales
+import os
+from PIL import ImageTk, Image
+#drive.mount('/content/drive')
+local_images_path='C:\\Users\\adana\\Documents\\Doctorado\\Sem05\\smalltests\\DLCourse\\Mnist\\testSamplesinverted'
+#local_images_path='testSamplesinverted/'
+#local_images_path = "local_images"
+# Función para cargar y validar imágenes locales
+def load_and_validate_images(folder_path, target_size=(28, 28)):
+    images = []
+    for filename in os.listdir(folder_path):
+        if filename.endswith((".png", ".jpg", ".jpeg")):
+            try:
+                img = Image.open(os.path.join(folder_path, filename)).convert("L") # Convertir a escala de grises
+                if img.size != target_size:
+                    img = img.resize(target_size) # Redimensionar si es necesario
+                img_array = np.array(img).astype("float32") / 255
+                img_array = np.expand_dims(img_array, -1) # Expandir dimensiones a (28, 28, 1)
+                images.append(img_array)
+            except Exception as e:
+                print(f"Error al procesar {filename}: {e}")
+    return np.array(images)
+# Cargar y validar las imágenes locales
+local_images = load_and_validate_images(local_images_path)
+
+# Realizar predicciones en las imágenes locales y mostrarlas
+if len(local_images) > 0:
+    for i in range(min(9, len(local_images))):
+        plt.subplot(350 + 1 + i)
+        plt.imshow(local_images[i, :, :, 0], cmap=plt.get_cmap('gray'))
+        prediction = model.predict(np.expand_dims(local_images[i], 0))
+        plt.title(f'Pred: {np.argmax(prediction)}')
+    plt.show()
+else:
+    print("No se encontraron imágenes locales para predecir.")
+    
+# Graficar el historial de entrenamiento
+plt.figure(figsize=(12, 4))
+
+plt.subplot(1, 2, 1)
+plt.plot(history.history['accuracy'], label='Precisión de entrenamiento')
+plt.plot(history.history['val_accuracy'], label='Precisión de validación')
+plt.title('Precisión durante el entrenamiento y la validación')
+plt.xlabel('Época')
+plt.ylabel('Precisión')
+plt.legend()
